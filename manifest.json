@@ -1,0 +1,16 @@
+{
+  "background_color": "#064e3b",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Admin Poin",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "Admin Poin",
+  "start_url": "/",
+  "theme_color": "#064e3b",
+  "id": "com.ztronik.adminpoin",
+  "lang": "id",
+  "categories": [
+    "business"
+  ]
+}
