@@ -1,0 +1,29 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Poin Member",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "Z-Tronik",
+  "start_url": "./index.html",
+  "theme_color": "#064e3b",
+  "id": "com.ztronik.poinmember",
+  "description": "Aplikasi layanan pengecekan poin member untuk pelanggan setia Z-TRONIK",
+  "lang": "id",
+  "categories": [
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
