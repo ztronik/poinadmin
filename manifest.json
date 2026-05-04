@@ -1,19 +1,19 @@
 {
-  "background_color": "#ffffff",
+  "background_color": "#064e3b",
   "dir": "ltr",
   "display": "standalone",
-  "name": "Poin Member",
+  "name": "Admin Poin",
   "orientation": "portrait",
   "scope": "/",
-  "short_name": "Z-Tronik",
+  "short_name": "Admin Poin",
   "start_url": "./index.html",
   "theme_color": "#064e3b",
-  "id": "com.ztronik.poinmember",
-  "description": "Aplikasi layanan pengecekan poin member untuk pelanggan setia Z-TRONIK",
+  "id": "com.ztronik.adminpoin",
+  "description": "Aplikasi layanan Admin poin member untuk Z-TRONIK.",
   "lang": "id",
   "categories": [
     "business"
-  ],
+  ]
   "icons": [
     {
       "src": "icon-192x192.png",
