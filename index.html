@@ -216,6 +216,8 @@
                         <option value="terbaru">Terbaru</option>
                         <option value="poin_desc">Poin Tertinggi</option>
                         <option value="poin_asc">Poin Terendah</option>
+                        <option value="akumulasi_desc">Akumulasi Tertinggi</option>
+                        <option value="akumulasi_asc">Akumulasi Terendah</option>
                         <option value="nama_asc">Nama A-Z</option>
                         <option value="nama_desc">Nama Z-A</option>
                     </select>
@@ -918,6 +920,8 @@
                 : [...allMembersData];
             if (sortType === 'poin_desc') filteredMembersData.sort((a, b) => b.poin - a.poin);
             else if (sortType === 'poin_asc') filteredMembersData.sort((a, b) => a.poin - b.poin);
+            else if (sortType === 'akumulasi_desc') filteredMembersData.sort((a, b) => (b.poin_akumulasi || 0) - (a.poin_akumulasi || 0));
+            else if (sortType === 'akumulasi_asc') filteredMembersData.sort((a, b) => (a.poin_akumulasi || 0) - (b.poin_akumulasi || 0));
             else if (sortType === 'nama_asc') filteredMembersData.sort((a, b) => a.nama.localeCompare(b.nama));
             else if (sortType === 'nama_desc') filteredMembersData.sort((a, b) => b.nama.localeCompare(a.nama));
             document.getElementById('total-member-count').innerText = filteredMembersData.length;
@@ -961,17 +965,26 @@
                     const namaEsc = m.nama.replace(/'/g, "\\'");
                     const hpEsc = (m.hp||'').toString().replace(/'/g, "\\'");
                     const almEsc = (m.alamat||'').toString().replace(/'/g, "\\'");
+                    const akumulasi = m.poin_akumulasi || 0;
                     list.innerHTML += `
                     <li class="p-3 flex items-center gap-2">
                         <div class="flex-1 min-w-0">
                             <p class="font-bold text-slate-800 text-xs truncate">${m.nama}</p>
                             <p class="text-[10px] text-slate-400 uppercase truncate">ID: ${m.id}</p>
                             <p class="text-[10px] text-slate-400 truncate">HP: ${m.hp || '-'}</p>
+                            <div class="flex items-center gap-1 mt-0.5">
+                                <span class="text-purple-600 font-bold bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-lg text-[9px]">Akum: ${akumulasi} Pts</span>
+                                <button onclick="editAkumulasiMember('${idEsc}', ${akumulasi})" class="w-5 h-5 bg-blue-50 text-blue-400 border border-blue-100 rounded flex items-center justify-center active:scale-90 transition" title="Edit Akumulasi"><i class="fa-solid fa-pen text-[8px]"></i></button>
+                                <button onclick="resetAkumulasiMember('${idEsc}', '${namaEsc}')" class="w-5 h-5 bg-rose-50 text-rose-400 border border-rose-100 rounded flex items-center justify-center active:scale-90 transition" title="Reset Akumulasi"><i class="fa-solid fa-rotate-left text-[8px]"></i></button>
+                            </div>
                         </div>
                         <div class="flex flex-col items-end gap-1.5 shrink-0">
-                            <span class="text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg text-[10px]">${m.poin} Pts</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="editPoinUtamaMember('${idEsc}', ${m.poin})" class="w-5 h-5 bg-emerald-50 text-emerald-400 border border-emerald-100 rounded flex items-center justify-center active:scale-90 transition" title="Edit Poin Utama"><i class="fa-solid fa-pen text-[8px]"></i></button>
+                                <span class="text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg text-[10px]">${m.poin} Pts</span>
+                            </div>
                             <div class="flex gap-1">
-                                <button onclick="bukaMemberEdit('${idEsc}','${namaEsc}','${hpEsc}','${almEsc}')" class="w-7 h-7 bg-amber-50 text-amber-500 border border-amber-100 rounded-lg flex items-center justify-center active:scale-90 transition" title="Edit"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                <button onclick="bukaMemberEdit('${idEsc}','${namaEsc}','${hpEsc}','${almEsc}')" class="w-7 h-7 bg-amber-50 text-amber-500 border border-amber-100 rounded-lg flex items-center justify-center active:scale-90 transition" title="Edit Data"><i class="fa-solid fa-pen text-[10px]"></i></button>
                                 <button onclick="hapusMemberLangsung('${idEsc}','${namaEsc}')" class="w-7 h-7 bg-rose-50 text-rose-500 border border-rose-100 rounded-lg flex items-center justify-center active:scale-90 transition" title="Hapus"><i class="fa-solid fa-trash text-[10px]"></i></button>
                             </div>
                         </div>
@@ -1007,6 +1020,134 @@
                     document.getElementById('total-member-badge').innerText = memberCache.length;
                     ztPopup({type:"success",title:"Berhasil Dihapus",msg:"Data member telah berhasil dihapus dari sistem."});
                     filterDaftarMember();
+                }
+            } catch(e) { ztPopup({type:"error",title:"Kesalahan Server",msg:"Terjadi kesalahan. Silakan coba lagi."}); }
+            }});
+        }
+
+        function editAkumulasiMember(id, akumulasiSaat) {
+            // Buat mini-form input di dalam popup
+            const overlay = document.getElementById('zt-popup-overlay');
+            const box = document.getElementById('zt-popup-box');
+            const iconWrap = document.getElementById('zt-popup-icon-wrap');
+            const icon = document.getElementById('zt-popup-icon');
+            const titleEl = document.getElementById('zt-popup-title');
+            const msgEl = document.getElementById('zt-popup-msg');
+            const btns = document.getElementById('zt-popup-btns');
+
+            box.style.background = '#eff6ff';
+            box.style.border = '2px solid #bfdbfe';
+            iconWrap.style.background = '#dbeafe';
+            icon.className = 'fa-solid fa-pen';
+            icon.style.color = '#2563eb';
+            titleEl.style.color = '#1d4ed8';
+            titleEl.innerText = 'Edit Poin Akumulasi';
+            msgEl.innerHTML = `<span class="text-xs text-slate-500">Masukkan nilai poin akumulasi baru:<br><small class="text-purple-600 font-bold">(Poin akumulasi hanya untuk THR, tidak bisa ditukar)</small></span><br><input type="number" id="input-akumulasi-baru" value="${akumulasiSaat}" min="0" class="mt-2 w-full px-3 py-2 border border-blue-200 rounded-xl text-sm text-center font-bold focus:outline-none focus:border-blue-400" placeholder="Masukkan poin akumulasi">`;
+            btns.innerHTML = '';
+
+            const btnCancel = document.createElement('button');
+            btnCancel.className = 'flex-1 py-3 rounded-2xl font-bold text-sm bg-slate-100 text-slate-500 hover:bg-slate-200 transition active:scale-95';
+            btnCancel.innerText = 'Batal';
+            btnCancel.onclick = () => tutupZtPopup();
+            btns.appendChild(btnCancel);
+
+            const btnOk = document.createElement('button');
+            btnOk.className = 'flex-1 py-3 rounded-2xl font-bold text-sm text-white shadow-lg transition active:scale-95';
+            btnOk.style.background = '#2563eb';
+            btnOk.innerText = 'Simpan';
+            btnOk.onclick = async () => {
+                const nilBaru = parseInt(document.getElementById('input-akumulasi-baru').value);
+                if (isNaN(nilBaru) || nilBaru < 0) return;
+                tutupZtPopup();
+                try {
+                    const res = await fetch(URL_DATABASE, { method: 'POST', headers: HEADERS_POST, redirect: 'follow', body: JSON.stringify({ action: 'update_akumulasi', id: id, poin_akumulasi: nilBaru }) });
+                    const r = await res.json();
+                    if (r.status === 'success') {
+                        const idx = memberCache.findIndex(m => m.id == id);
+                        if (idx > -1) memberCache[idx].poin_akumulasi = nilBaru;
+                        const idx2 = allMembersData.findIndex(m => m.id == id);
+                        if (idx2 > -1) allMembersData[idx2].poin_akumulasi = nilBaru;
+                        filterDaftarMember();
+                        ztPopup({type:"success",title:"Akumulasi Diperbarui",msg:"Poin akumulasi member berhasil diubah menjadi " + nilBaru + " Pts."});
+                    } else {
+                        ztPopup({type:"error",title:"Gagal",msg:"Gagal memperbarui poin akumulasi."});
+                    }
+                } catch(e) { ztPopup({type:"error",title:"Kesalahan Server",msg:"Terjadi kesalahan. Silakan coba lagi."}); }
+            };
+            btns.appendChild(btnOk);
+            overlay.style.display = 'flex';
+            setTimeout(() => box.classList.replace('scale-90', 'scale-100'), 10);
+            setTimeout(() => { const inp = document.getElementById('input-akumulasi-baru'); if(inp){inp.focus();inp.select();} }, 150);
+        }
+
+        function editPoinUtamaMember(id, poinSaat) {
+            const overlay = document.getElementById('zt-popup-overlay');
+            const box = document.getElementById('zt-popup-box');
+            const iconWrap = document.getElementById('zt-popup-icon-wrap');
+            const icon = document.getElementById('zt-popup-icon');
+            const titleEl = document.getElementById('zt-popup-title');
+            const msgEl = document.getElementById('zt-popup-msg');
+            const btns = document.getElementById('zt-popup-btns');
+
+            box.style.background = '#f0fdf4';
+            box.style.border = '2px solid #bbf7d0';
+            iconWrap.style.background = '#dcfce7';
+            icon.className = 'fa-solid fa-coins';
+            icon.style.color = '#16a34a';
+            titleEl.style.color = '#15803d';
+            titleEl.innerText = 'Edit Poin Utama';
+            msgEl.innerHTML = `<span class="text-xs text-slate-500">Masukkan nilai poin utama yang benar:<br><small class="text-rose-500 font-bold">(Gunakan fitur ini hanya untuk koreksi kesalahan input)</small></span><br><input type="number" id="input-poin-utama-baru" value="${poinSaat}" min="0" class="mt-2 w-full px-3 py-2 border border-emerald-200 rounded-xl text-sm text-center font-bold focus:outline-none focus:border-emerald-400" placeholder="Masukkan poin utama">`;
+            btns.innerHTML = '';
+
+            const btnCancel = document.createElement('button');
+            btnCancel.className = 'flex-1 py-3 rounded-2xl font-bold text-sm bg-slate-100 text-slate-500 hover:bg-slate-200 transition active:scale-95';
+            btnCancel.innerText = 'Batal';
+            btnCancel.onclick = () => tutupZtPopup();
+            btns.appendChild(btnCancel);
+
+            const btnOk = document.createElement('button');
+            btnOk.className = 'flex-1 py-3 rounded-2xl font-bold text-sm text-white shadow-lg transition active:scale-95';
+            btnOk.style.background = '#16a34a';
+            btnOk.innerText = 'Simpan';
+            btnOk.onclick = async () => {
+                const nilBaru = parseInt(document.getElementById('input-poin-utama-baru').value);
+                if (isNaN(nilBaru) || nilBaru < 0) return;
+                tutupZtPopup();
+                try {
+                    const res = await fetch(URL_DATABASE, { method: 'POST', headers: HEADERS_POST, redirect: 'follow', body: JSON.stringify({ action: 'update_poin', id: id, poin: nilBaru }) });
+                    const r = await res.json();
+                    if (r.status === 'success') {
+                        const idx = memberCache.findIndex(m => m.id == id);
+                        if (idx > -1) memberCache[idx].poin = nilBaru;
+                        const idx2 = allMembersData.findIndex(m => m.id == id);
+                        if (idx2 > -1) allMembersData[idx2].poin = nilBaru;
+                        filterDaftarMember();
+                        ztPopup({type:"success",title:"Poin Diperbarui",msg:"Poin utama member berhasil diubah menjadi " + nilBaru + " Pts."});
+                    } else {
+                        ztPopup({type:"error",title:"Gagal",msg:"Gagal memperbarui poin utama."});
+                    }
+                } catch(e) { ztPopup({type:"error",title:"Kesalahan Server",msg:"Terjadi kesalahan. Silakan coba lagi."}); }
+            };
+            btns.appendChild(btnOk);
+            overlay.style.display = 'flex';
+            setTimeout(() => box.classList.replace('scale-90', 'scale-100'), 10);
+            setTimeout(() => { const inp = document.getElementById('input-poin-utama-baru'); if(inp){inp.focus();inp.select();} }, 150);
+        }
+
+        async function resetAkumulasiMember(id, nama) {
+            ztPopup({type:"confirm",title:"Reset Akumulasi?",msg:`Reset poin akumulasi "${nama}" ke 0? Tindakan ini tidak bisa dibatalkan!`,confirmText:"Ya, Reset",cancelText:"Batal",onConfirm: async ()=>{
+            try {
+                const res = await fetch(URL_DATABASE, { method: 'POST', headers: HEADERS_POST, redirect: 'follow', body: JSON.stringify({ action: 'reset_akumulasi', id: id }) });
+                const r = await res.json();
+                if (r.status === 'success') {
+                    const idx = memberCache.findIndex(m => m.id == id);
+                    if (idx > -1) memberCache[idx].poin_akumulasi = 0;
+                    const idx2 = allMembersData.findIndex(m => m.id == id);
+                    if (idx2 > -1) allMembersData[idx2].poin_akumulasi = 0;
+                    filterDaftarMember();
+                    ztPopup({type:"success",title:"Akumulasi Direset",msg:"Poin akumulasi member berhasil direset ke 0."});
+                } else {
+                    ztPopup({type:"error",title:"Gagal",msg:"Gagal mereset poin akumulasi."});
                 }
             } catch(e) { ztPopup({type:"error",title:"Kesalahan Server",msg:"Terjadi kesalahan. Silakan coba lagi."}); }
             }});
@@ -1315,7 +1456,7 @@
                 if(r.status === 'success') { 
                     ztPopup({type:"success",title:"Member Terdaftar!",msg:"Member baru berhasil ditambahkan. ID: " + id}); 
                     resetFormMember(); 
-                    memberCache.push({ id: id, nama: n, poin: 0, hp: hp, alamat: alm });
+                    memberCache.push({ id: id, nama: n, poin: 0, hp: hp, alamat: alm, poin_akumulasi: 0 });
                     memberCacheLoaded = true;
                     allMembersData = [...memberCache].reverse();
                     document.getElementById('total-member-badge').innerText = memberCache.length;
@@ -1485,7 +1626,10 @@
                 if(r.status === 'success') { 
                     ztPopup({type:"success",title:"Checkout Berhasil!",msg:"Transaksi selesai. Sisa poin member: " + r.poin_baru + " Pts"}); 
                     const idxCache = memberCache.findIndex(m => m.id == r.id_asli);
-                    if(idxCache > -1) memberCache[idxCache].poin = r.poin_baru;
+                    if(idxCache > -1) {
+                        memberCache[idxCache].poin = r.poin_baru;
+                        if (r.poin_akumulasi_baru !== undefined) memberCache[idxCache].poin_akumulasi = r.poin_akumulasi_baru;
+                    }
                     keranjangPoin = []; 
                     renderKeranjang();
                     fetchDaftarMember(); 
